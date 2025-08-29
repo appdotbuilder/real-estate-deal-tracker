@@ -48,11 +48,26 @@ export const communicationsTable = pgTable('communications', {
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Contacts table
+export const contactsTable = pgTable('contacts', {
+  id: serial('id').primaryKey(),
+  property_deal_id: integer('property_deal_id').notNull().references(() => propertyDealsTable.id),
+  name: text('name').notNull(),
+  role: text('role').notNull(),
+  organization: text('organization'), // Nullable
+  email: text('email'), // Nullable
+  phone: text('phone'), // Nullable
+  notes: text('notes'), // Nullable
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Define relationships
 export const propertyDealsRelations = relations(propertyDealsTable, ({ many }) => ({
   tasks: many(tasksTable),
   documents: many(documentsTable),
   communications: many(communicationsTable),
+  contacts: many(contactsTable),
 }));
 
 export const tasksRelations = relations(tasksTable, ({ one }) => ({
@@ -76,10 +91,18 @@ export const communicationsRelations = relations(communicationsTable, ({ one }) 
   }),
 }));
 
+export const contactsRelations = relations(contactsTable, ({ one }) => ({
+  propertyDeal: one(propertyDealsTable, {
+    fields: [contactsTable.property_deal_id],
+    references: [propertyDealsTable.id],
+  }),
+}));
+
 // Export all tables for proper query building
 export const tables = {
   propertyDeals: propertyDealsTable,
   tasks: tasksTable,
   documents: documentsTable,
   communications: communicationsTable,
+  contacts: contactsTable,
 };

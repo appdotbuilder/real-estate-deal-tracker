@@ -13,17 +13,20 @@ import {
   MessageSquare,
   Calendar,
   MapPin,
-  AlertCircle
+  AlertCircle,
+  Users
 } from 'lucide-react';
 import { trpc } from '@/utils/trpc';
-import type { PropertyDeal, Task, Document, Communication } from '../../../server/src/schema';
+import type { PropertyDeal, Task, Document, Communication, Contact } from '../../../server/src/schema';
 import { PropertyDealForm } from '@/components/PropertyDealForm';
 import { TaskForm } from '@/components/TaskForm';
 import { DocumentForm } from '@/components/DocumentForm';
 import { CommunicationForm } from '@/components/CommunicationForm';
+import { ContactForm } from '@/components/ContactForm';
 import { TaskList } from '@/components/TaskList';
 import { DocumentList } from '@/components/DocumentList';
 import { CommunicationList } from '@/components/CommunicationList';
+import { ContactList } from '@/components/ContactList';
 
 interface PropertyDealDetailProps {
   dealId: number;
@@ -36,26 +39,30 @@ export function PropertyDealDetail({ dealId, onBack, onDealUpdate }: PropertyDea
   const [tasks, setTasks] = useState<Task[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [communications, setCommunications] = useState<Communication[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showDocumentForm, setShowDocumentForm] = useState(false);
   const [showCommunicationForm, setShowCommunicationForm] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadDealData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [dealData, tasksData, documentsData, communicationsData] = await Promise.all([
+      const [dealData, tasksData, documentsData, communicationsData, contactsData] = await Promise.all([
         trpc.getPropertyDealById.query({ id: dealId }),
         trpc.getTasksByPropertyDeal.query({ property_deal_id: dealId }),
         trpc.getDocumentsByPropertyDeal.query({ property_deal_id: dealId }),
-        trpc.getCommunicationsByPropertyDeal.query({ property_deal_id: dealId })
+        trpc.getCommunicationsByPropertyDeal.query({ property_deal_id: dealId }),
+        trpc.getContactsByPropertyDeal.query({ property_deal_id: dealId })
       ]);
       
       setDeal(dealData);
       setTasks(tasksData);
       setDocuments(documentsData);
       setCommunications(communicationsData);
+      setContacts(contactsData);
     } catch (error) {
       console.error('Failed to load deal data:', error);
     } finally {
@@ -195,7 +202,7 @@ export function PropertyDealDetail({ dealId, onBack, onDealUpdate }: PropertyDea
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-4 border-t">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">{tasks.length}</div>
                   <div className="text-sm text-gray-600">Total Tasks</div>
@@ -212,14 +219,18 @@ export function PropertyDealDetail({ dealId, onBack, onDealUpdate }: PropertyDea
                   <div className="text-2xl font-bold text-orange-600">{communications.length}</div>
                   <div className="text-sm text-gray-600">Communications</div>
                 </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-indigo-600">{contacts.length}</div>
+                  <div className="text-sm text-gray-600">Contacts</div>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Tabs for Tasks, Documents, Communications */}
+        {/* Tabs for Tasks, Documents, Communications, Contacts */}
         <Tabs defaultValue="tasks" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="tasks" className="flex items-center space-x-2">
               <CheckSquare2 className="h-4 w-4" />
               <span>Tasks</span>
@@ -236,6 +247,10 @@ export function PropertyDealDetail({ dealId, onBack, onDealUpdate }: PropertyDea
             <TabsTrigger value="communications" className="flex items-center space-x-2">
               <MessageSquare className="h-4 w-4" />
               <span>Communications</span>
+            </TabsTrigger>
+            <TabsTrigger value="contacts" className="flex items-center space-x-2">
+              <Users className="h-4 w-4" />
+              <span>Contacts</span>
             </TabsTrigger>
           </TabsList>
 
@@ -319,6 +334,33 @@ export function PropertyDealDetail({ dealId, onBack, onDealUpdate }: PropertyDea
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="contacts">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Users className="h-5 w-5" />
+                    <span>Contacts ({contacts.length})</span>
+                  </CardTitle>
+                  <Button
+                    onClick={() => setShowContactForm(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Contact
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ContactList 
+                  contacts={contacts} 
+                  onContactUpdate={loadDealData}
+                  dealId={dealId}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
         {/* Edit Property Deal Modal */}
@@ -383,6 +425,23 @@ export function PropertyDealDetail({ dealId, onBack, onDealUpdate }: PropertyDea
                   loadDealData();
                 }}
                 onCancel={() => setShowCommunicationForm(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Contact Form Modal */}
+        {showContactForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-semibold mb-4">Add New Contact</h2>
+              <ContactForm
+                propertyDealId={dealId}
+                onSuccess={() => {
+                  setShowContactForm(false);
+                  loadDealData();
+                }}
+                onCancel={() => setShowContactForm(false)}
               />
             </div>
           </div>

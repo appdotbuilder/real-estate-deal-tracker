@@ -132,6 +132,46 @@ export const updateCommunicationInputSchema = z.object({
 
 export type UpdateCommunicationInput = z.infer<typeof updateCommunicationInputSchema>;
 
+// Contact schemas
+export const contactSchema = z.object({
+  id: z.number(),
+  property_deal_id: z.number(),
+  name: z.string(),
+  role: z.string(),
+  organization: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  notes: z.string().nullable(),
+  created_at: z.coerce.date(),
+  updated_at: z.coerce.date(),
+});
+
+export type Contact = z.infer<typeof contactSchema>;
+
+export const createContactInputSchema = z.object({
+  property_deal_id: z.number(),
+  name: z.string(),
+  role: z.string(),
+  organization: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  notes: z.string().nullable(),
+});
+
+export type CreateContactInput = z.infer<typeof createContactInputSchema>;
+
+export const updateContactInputSchema = z.object({
+  id: z.number(),
+  name: z.string().optional(),
+  role: z.string().optional(),
+  organization: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export type UpdateContactInput = z.infer<typeof updateContactInputSchema>;
+
 // Query parameter schemas
 export const getByIdInputSchema = z.object({
   id: z.number(),

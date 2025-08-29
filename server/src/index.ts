@@ -16,6 +16,8 @@ import {
   updateDocumentInputSchema,
   createCommunicationInputSchema,
   updateCommunicationInputSchema,
+  createContactInputSchema,
+  updateContactInputSchema,
 } from './schema';
 
 // Import all handlers
@@ -42,6 +44,12 @@ import { getCommunicationsByPropertyDeal } from './handlers/get_communications_b
 import { getCommunicationById } from './handlers/get_communication_by_id';
 import { updateCommunication } from './handlers/update_communication';
 import { deleteCommunication } from './handlers/delete_communication';
+
+import { createContact } from './handlers/create_contact';
+import { getContactsByPropertyDeal } from './handlers/get_contacts_by_property_deal';
+import { getContactById } from './handlers/get_contact_by_id';
+import { updateContact } from './handlers/update_contact';
+import { deleteContact } from './handlers/delete_contact';
 
 const t = initTRPC.create({
   transformer: superjson,
@@ -138,6 +146,27 @@ const appRouter = router({
   deleteCommunication: publicProcedure
     .input(getByIdInputSchema)
     .mutation(({ input }) => deleteCommunication(input)),
+
+  // Contact routes
+  createContact: publicProcedure
+    .input(createContactInputSchema)
+    .mutation(({ input }) => createContact(input)),
+  
+  getContactsByPropertyDeal: publicProcedure
+    .input(getByPropertyDealIdInputSchema)
+    .query(({ input }) => getContactsByPropertyDeal(input)),
+  
+  getContactById: publicProcedure
+    .input(getByIdInputSchema)
+    .query(({ input }) => getContactById(input)),
+  
+  updateContact: publicProcedure
+    .input(updateContactInputSchema)
+    .mutation(({ input }) => updateContact(input)),
+  
+  deleteContact: publicProcedure
+    .input(getByIdInputSchema)
+    .mutation(({ input }) => deleteContact(input)),
 });
 
 export type AppRouter = typeof appRouter;

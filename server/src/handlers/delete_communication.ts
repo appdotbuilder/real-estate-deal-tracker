@@ -1,8 +1,19 @@
+import { db } from '../db';
+import { communicationsTable } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import { type GetByIdInput } from '../schema';
 
-export async function deleteCommunication(input: GetByIdInput): Promise<boolean> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is deleting a communication record from the database.
-  // Returns true if successfully deleted, false otherwise.
-  return false;
-}
+export const deleteCommunication = async (input: GetByIdInput): Promise<boolean> => {
+  try {
+    // Delete the communication record
+    const result = await db.delete(communicationsTable)
+      .where(eq(communicationsTable.id, input.id))
+      .execute();
+
+    // Return true if at least one row was affected (deleted)
+    return (result.rowCount ?? 0) > 0;
+  } catch (error) {
+    console.error('Communication deletion failed:', error);
+    throw error;
+  }
+};

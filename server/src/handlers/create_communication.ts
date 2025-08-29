@@ -1,16 +1,28 @@
+import { db } from '../db';
+import { communicationsTable } from '../db/schema';
 import { type CreateCommunicationInput, type Communication } from '../schema';
 
-export async function createCommunication(input: CreateCommunicationInput): Promise<Communication> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is creating a new communication record associated with a property deal.
-  return Promise.resolve({
-    id: 0, // Placeholder ID
-    property_deal_id: input.property_deal_id,
-    date: input.date,
-    type: input.type,
-    subject: input.subject,
-    notes: input.notes,
-    created_at: new Date(),
-    updated_at: new Date(),
-  } as Communication);
-}
+export const createCommunication = async (input: CreateCommunicationInput): Promise<Communication> => {
+  try {
+    // Insert communication record
+    const result = await db.insert(communicationsTable)
+      .values({
+        property_deal_id: input.property_deal_id,
+        date: input.date.toISOString().split('T')[0], // Convert Date to YYYY-MM-DD format
+        type: input.type,
+        subject: input.subject,
+        notes: input.notes
+      })
+      .returning()
+      .execute();
+
+    // Convert the date string back to Date object for the response
+    return {
+      ...result[0],
+      date: new Date(result[0].date)
+    };
+  } catch (error) {
+    console.error('Communication creation failed:', error);
+    throw error;
+  }
+};

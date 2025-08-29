@@ -43,6 +43,7 @@ export const taskSchema = z.object({
   status: z.string(),
   created_at: z.coerce.date(),
   updated_at: z.coerce.date(),
+  contact: z.lazy(() => contactSchema).nullable().optional(),
 });
 
 export type Task = z.infer<typeof taskSchema>;
@@ -174,22 +175,6 @@ export const updateContactInputSchema = z.object({
 });
 
 export type UpdateContactInput = z.infer<typeof updateContactInputSchema>;
-
-// Task with contact information for joined queries
-export const taskWithContactSchema = z.object({
-  id: z.number(),
-  property_deal_id: z.number(),
-  contact_id: z.number().nullable(),
-  name: z.string(),
-  description: z.string(),
-  due_date: z.coerce.date(),
-  status: z.string(),
-  created_at: z.coerce.date(),
-  updated_at: z.coerce.date(),
-  contact: contactSchema.nullable(),
-});
-
-export type TaskWithContact = z.infer<typeof taskWithContactSchema>;
 
 // Query parameter schemas
 export const getByIdInputSchema = z.object({

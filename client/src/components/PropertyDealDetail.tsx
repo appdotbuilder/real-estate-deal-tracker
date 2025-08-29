@@ -17,7 +17,7 @@ import {
   Users
 } from 'lucide-react';
 import { trpc } from '@/utils/trpc';
-import type { PropertyDeal, TaskWithContact, Document, Communication, Contact } from '../../../server/src/schema';
+import type { PropertyDeal, Task, Document, Communication, Contact } from '../../../server/src/schema';
 import { PropertyDealForm } from '@/components/PropertyDealForm';
 import { TaskForm } from '@/components/TaskForm';
 import { DocumentForm } from '@/components/DocumentForm';
@@ -36,7 +36,7 @@ interface PropertyDealDetailProps {
 
 export function PropertyDealDetail({ dealId, onBack, onDealUpdate }: PropertyDealDetailProps) {
   const [deal, setDeal] = useState<PropertyDeal | null>(null);
-  const [tasks, setTasks] = useState<TaskWithContact[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [communications, setCommunications] = useState<Communication[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -274,6 +274,7 @@ export function PropertyDealDetail({ dealId, onBack, onDealUpdate }: PropertyDea
               <CardContent>
                 <TaskList 
                   tasks={tasks} 
+                  contacts={contacts}
                   onTaskUpdate={loadDealData}
                   dealId={dealId}
                 />
@@ -386,6 +387,7 @@ export function PropertyDealDetail({ dealId, onBack, onDealUpdate }: PropertyDea
               <h2 className="text-xl font-semibold mb-4">Add New Task</h2>
               <TaskForm
                 propertyDealId={dealId}
+                contacts={contacts}
                 onSuccess={() => {
                   setShowTaskForm(false);
                   loadDealData();

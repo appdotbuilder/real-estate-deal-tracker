@@ -1,35 +1,19 @@
 import { db } from '../db';
 import { tasksTable, contactsTable } from '../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { type UpdateTaskInput, type Task } from '../schema';
 
 export async function updateTask(input: UpdateTaskInput): Promise<Task | null> {
   try {
-    // If contact_id is provided, validate it first
+    // Verify that the contact exists if contact_id is being updated to a non-null value
     if (input.contact_id !== undefined && input.contact_id !== null) {
-      // Get the current task to check property_deal_id
-      const currentTask = await db.select()
-        .from(tasksTable)
-        .where(eq(tasksTable.id, input.id))
-        .execute();
-
-      if (currentTask.length === 0) {
-        return null; // Task not found
-      }
-
-      // Verify that the contact exists and belongs to the same property deal
       const contact = await db.select()
         .from(contactsTable)
-        .where(
-          and(
-            eq(contactsTable.id, input.contact_id),
-            eq(contactsTable.property_deal_id, currentTask[0].property_deal_id)
-          )
-        )
+        .where(eq(contactsTable.id, input.contact_id))
         .execute();
 
       if (contact.length === 0) {
-        throw new Error(`Contact with id ${input.contact_id} not found or does not belong to the same property deal`);
+        throw new Error(`Contact with id ${input.contact_id} not found`);
       }
     }
 

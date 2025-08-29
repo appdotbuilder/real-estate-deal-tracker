@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,16 +9,18 @@ import type { CreateTaskInput, Contact } from '../../../server/src/schema';
 
 interface TaskFormProps {
   propertyDealId: number;
+  contacts: Contact[];
   onSuccess: () => void;
   onCancel: () => void;
   isLoading?: boolean;
-  initialData?: Partial<CreateTaskInput>;
+  initialData?: Partial<CreateTaskInput & { contact_id?: number | null }>;
   isEdit?: boolean;
   taskId?: number;
 }
 
 export function TaskForm({ 
   propertyDealId,
+  contacts,
   onSuccess, 
   onCancel, 
   isLoading = false, 
@@ -35,22 +37,7 @@ export function TaskForm({
     status: initialData?.status || 'To Do'
   });
 
-  const [contacts, setContacts] = useState<Contact[]>([]);
   const [submitting, setSubmitting] = useState(false);
-
-  // Load contacts for the property deal
-  const loadContacts = useCallback(async () => {
-    try {
-      const contactsData = await trpc.getContactsByPropertyDeal.query({ property_deal_id: propertyDealId });
-      setContacts(contactsData);
-    } catch (error) {
-      console.error('Failed to load contacts:', error);
-    }
-  }, [propertyDealId]);
-
-  useEffect(() => {
-    loadContacts();
-  }, [loadContacts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,31 +120,6 @@ export function TaskForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="contact_id">Assigned Contact</Label>
-        <Select 
-          value={formData.contact_id?.toString() || 'none'} 
-          onValueChange={(value: string) =>
-            setFormData((prev: CreateTaskInput) => ({ 
-              ...prev, 
-              contact_id: value === 'none' ? null : parseInt(value) 
-            }))
-          }
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a contact (optional)" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No contact assigned</SelectItem>
-            {contacts.map((contact) => (
-              <SelectItem key={contact.id} value={contact.id.toString()}>
-                {contact.name} - {contact.role}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="status">Status *</Label>
         <Select 
           value={formData.status || 'To Do'} 
@@ -172,6 +134,31 @@ export function TaskForm({
             {statusOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="contact">Assign To Contact</Label>
+        <Select 
+          value={formData.contact_id?.toString() || 'unassigned'} 
+          onValueChange={(value: string) =>
+            setFormData((prev: CreateTaskInput) => ({ 
+              ...prev, 
+              contact_id: value === 'unassigned' ? null : parseInt(value)
+            }))
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select contact (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="unassigned">Unassigned</SelectItem>
+            {contacts.map((contact) => (
+              <SelectItem key={contact.id} value={contact.id.toString()}>
+                {contact.name} - {contact.role}
               </SelectItem>
             ))}
           </SelectContent>

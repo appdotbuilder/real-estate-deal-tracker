@@ -1,7 +1,7 @@
 import { db } from '../db';
 import { tasksTable, propertyDealsTable, contactsTable } from '../db/schema';
 import { type CreateTaskInput, type Task } from '../schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 export const createTask = async (input: CreateTaskInput): Promise<Task> => {
   try {
@@ -15,20 +15,15 @@ export const createTask = async (input: CreateTaskInput): Promise<Task> => {
       throw new Error(`Property deal with id ${input.property_deal_id} not found`);
     }
 
-    // If contact_id is provided, verify that the contact exists and belongs to the same property deal
-    if (input.contact_id) {
+    // Verify that the contact exists if contact_id is provided
+    if (input.contact_id !== undefined && input.contact_id !== null) {
       const contact = await db.select()
         .from(contactsTable)
-        .where(
-          and(
-            eq(contactsTable.id, input.contact_id),
-            eq(contactsTable.property_deal_id, input.property_deal_id)
-          )
-        )
+        .where(eq(contactsTable.id, input.contact_id))
         .execute();
 
       if (contact.length === 0) {
-        throw new Error(`Contact with id ${input.contact_id} not found or does not belong to property deal ${input.property_deal_id}`);
+        throw new Error(`Contact with id ${input.contact_id} not found`);
       }
     }
 

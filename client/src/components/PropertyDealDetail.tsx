@@ -17,7 +17,7 @@ import {
   Users
 } from 'lucide-react';
 import { trpc } from '@/utils/trpc';
-import type { PropertyDeal, Task, Document, Communication, Contact } from '../../../server/src/schema';
+import type { PropertyDeal, TaskWithContact, Document, Communication, Contact } from '../../../server/src/schema';
 import { PropertyDealForm } from '@/components/PropertyDealForm';
 import { TaskForm } from '@/components/TaskForm';
 import { DocumentForm } from '@/components/DocumentForm';
@@ -36,7 +36,7 @@ interface PropertyDealDetailProps {
 
 export function PropertyDealDetail({ dealId, onBack, onDealUpdate }: PropertyDealDetailProps) {
   const [deal, setDeal] = useState<PropertyDeal | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskWithContact[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [communications, setCommunications] = useState<Communication[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);

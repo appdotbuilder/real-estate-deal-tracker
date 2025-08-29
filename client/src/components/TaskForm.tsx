@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { trpc } from '@/utils/trpc';
-import type { CreateTaskInput } from '../../../server/src/schema';
+import type { CreateTaskInput, Contact } from '../../../server/src/schema';
 
 interface TaskFormProps {
   propertyDealId: number;
@@ -28,13 +28,29 @@ export function TaskForm({
 }: TaskFormProps) {
   const [formData, setFormData] = useState<CreateTaskInput>({
     property_deal_id: propertyDealId,
+    contact_id: initialData?.contact_id || null,
     name: initialData?.name || '',
     description: initialData?.description || '',
     due_date: initialData?.due_date || new Date(),
     status: initialData?.status || 'To Do'
   });
 
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Load contacts for the property deal
+  const loadContacts = useCallback(async () => {
+    try {
+      const contactsData = await trpc.getContactsByPropertyDeal.query({ property_deal_id: propertyDealId });
+      setContacts(contactsData);
+    } catch (error) {
+      console.error('Failed to load contacts:', error);
+    }
+  }, [propertyDealId]);
+
+  useEffect(() => {
+    loadContacts();
+  }, [loadContacts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +130,31 @@ export function TaskForm({
           }
           required
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="contact_id">Assigned Contact</Label>
+        <Select 
+          value={formData.contact_id?.toString() || 'none'} 
+          onValueChange={(value: string) =>
+            setFormData((prev: CreateTaskInput) => ({ 
+              ...prev, 
+              contact_id: value === 'none' ? null : parseInt(value) 
+            }))
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a contact (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">No contact assigned</SelectItem>
+            {contacts.map((contact) => (
+              <SelectItem key={contact.id} value={contact.id.toString()}>
+                {contact.name} - {contact.role}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

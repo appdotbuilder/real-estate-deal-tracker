@@ -16,6 +16,7 @@ export const propertyDealsTable = pgTable('property_deals', {
 export const tasksTable = pgTable('tasks', {
   id: serial('id').primaryKey(),
   property_deal_id: integer('property_deal_id').notNull().references(() => propertyDealsTable.id),
+  contact_id: integer('contact_id').references(() => contactsTable.id),
   name: text('name').notNull(),
   description: text('description').notNull(),
   due_date: date('due_date').notNull(),
@@ -74,6 +75,10 @@ export const tasksRelations = relations(tasksTable, ({ one }) => ({
   propertyDeal: one(propertyDealsTable, {
     fields: [tasksTable.property_deal_id],
     references: [propertyDealsTable.id],
+  }),
+  contact: one(contactsTable, {
+    fields: [tasksTable.contact_id],
+    references: [contactsTable.id],
   }),
 }));
 

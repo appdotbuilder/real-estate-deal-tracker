@@ -2,19 +2,19 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Edit, Trash2, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Edit, Trash2, Calendar, AlertTriangle, CheckCircle2, User } from 'lucide-react';
 import { trpc } from '@/utils/trpc';
-import type { Task } from '../../../server/src/schema';
+import type { TaskWithContact } from '../../../server/src/schema';
 import { TaskForm } from '@/components/TaskForm';
 
 interface TaskListProps {
-  tasks: Task[];
+  tasks: TaskWithContact[];
   onTaskUpdate: () => void;
   dealId: number;
 }
 
 export function TaskList({ tasks, onTaskUpdate, dealId }: TaskListProps) {
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<TaskWithContact | null>(null);
 
   const handleDeleteTask = async (taskId: number) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
@@ -72,7 +72,7 @@ export function TaskList({ tasks, onTaskUpdate, dealId }: TaskListProps) {
   return (
     <>
       <div className="space-y-3">
-        {sortedTasks.map((task: Task) => (
+        {sortedTasks.map((task: TaskWithContact) => (
           <Card key={task.id} className="hover:shadow-sm transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
@@ -90,9 +90,17 @@ export function TaskList({ tasks, onTaskUpdate, dealId }: TaskListProps) {
                     )}
                   </div>
                   <p className="text-gray-600 text-sm mb-3">{task.description}</p>
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <Calendar className="h-4 w-4" />
-                    <span>Due: {task.due_date.toLocaleDateString()}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <Calendar className="h-4 w-4" />
+                      <span>Due: {task.due_date.toLocaleDateString()}</span>
+                    </div>
+                    {task.contact && (
+                      <div className="flex items-center space-x-2 text-sm text-gray-500">
+                        <User className="h-4 w-4" />
+                        <span>Assigned to: {task.contact.name} ({task.contact.role})</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex space-x-2 ml-4">
@@ -127,7 +135,14 @@ export function TaskList({ tasks, onTaskUpdate, dealId }: TaskListProps) {
               propertyDealId={dealId}
               onSuccess={handleEditSuccess}
               onCancel={() => setEditingTask(null)}
-              initialData={editingTask}
+              initialData={{
+                property_deal_id: editingTask.property_deal_id,
+                contact_id: editingTask.contact_id,
+                name: editingTask.name,
+                description: editingTask.description,
+                due_date: editingTask.due_date,
+                status: editingTask.status,
+              }}
               isEdit={true}
               taskId={editingTask.id}
             />

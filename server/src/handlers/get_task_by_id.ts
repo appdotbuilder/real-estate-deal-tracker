@@ -1,12 +1,35 @@
 import { db } from '../db';
-import { tasksTable } from '../db/schema';
-import { type GetByIdInput, type Task } from '../schema';
+import { tasksTable, contactsTable } from '../db/schema';
+import { type GetByIdInput, type TaskWithContact } from '../schema';
 import { eq } from 'drizzle-orm';
 
-export async function getTaskById(input: GetByIdInput): Promise<Task | null> {
+export async function getTaskById(input: GetByIdInput): Promise<TaskWithContact | null> {
   try {
-    const result = await db.select()
+    const result = await db.select({
+        id: tasksTable.id,
+        property_deal_id: tasksTable.property_deal_id,
+        contact_id: tasksTable.contact_id,
+        name: tasksTable.name,
+        description: tasksTable.description,
+        due_date: tasksTable.due_date,
+        status: tasksTable.status,
+        created_at: tasksTable.created_at,
+        updated_at: tasksTable.updated_at,
+        contact: {
+          id: contactsTable.id,
+          property_deal_id: contactsTable.property_deal_id,
+          name: contactsTable.name,
+          role: contactsTable.role,
+          organization: contactsTable.organization,
+          email: contactsTable.email,
+          phone: contactsTable.phone,
+          notes: contactsTable.notes,
+          created_at: contactsTable.created_at,
+          updated_at: contactsTable.updated_at,
+        }
+      })
       .from(tasksTable)
+      .leftJoin(contactsTable, eq(tasksTable.contact_id, contactsTable.id))
       .where(eq(tasksTable.id, input.id))
       .execute();
 
@@ -14,13 +37,18 @@ export async function getTaskById(input: GetByIdInput): Promise<Task | null> {
       return null;
     }
 
-    const task = result[0];
+    const taskData = result[0];
     return {
-      ...task,
-      // Convert date strings to Date objects for due_date
-      due_date: new Date(task.due_date),
-      created_at: task.created_at,
-      updated_at: task.updated_at,
+      id: taskData.id,
+      property_deal_id: taskData.property_deal_id,
+      contact_id: taskData.contact_id,
+      name: taskData.name,
+      description: taskData.description,
+      due_date: new Date(taskData.due_date),
+      status: taskData.status,
+      created_at: taskData.created_at,
+      updated_at: taskData.updated_at,
+      contact: taskData.contact?.id ? taskData.contact : null,
     };
   } catch (error) {
     console.error('Task retrieval failed:', error);
